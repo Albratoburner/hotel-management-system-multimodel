@@ -20,7 +20,8 @@ class Intent(BaseModel):
     reason: Optional[str] = Field(None, description="Reason for the bonus")
 
 def parse_intent(query: str) -> dict:
-    llm = ChatGroq(model="llama3-70b-8192", temperature=0).with_structured_output(Intent)
+    api_key = os.environ.get("GROQ_API_KEY")
+    llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=api_key, temperature=0).with_structured_output(Intent)
     
     prompt = PromptTemplate.from_template(
         "Extract the intent from the following user request.\n"

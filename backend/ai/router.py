@@ -10,7 +10,8 @@ class Route(BaseModel):
     destination: str = Field(description="The destination for the query. Either 'CRUD' for operations like booking or bonuses, or 'RAG' for questions about policies, FAQs, or rules.")
 
 def route_query(query: str) -> str:
-    llm = ChatGroq(model="llama3-70b-8192", temperature=0).with_structured_output(Route)
+    api_key = os.environ.get("GROQ_API_KEY")
+    llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=api_key, temperature=0).with_structured_output(Route)
     
     prompt = PromptTemplate.from_template(
         "You are an intelligent router for a hotel management system.\n"

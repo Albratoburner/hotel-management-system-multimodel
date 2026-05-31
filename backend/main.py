@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.api import staff, hr, chat
+from backend.api import staff, hr, chat, auth, stats
 
 app = FastAPI(title="AI Hotel Management System")
 
@@ -14,6 +14,8 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router, prefix="/api")
+app.include_router(stats.router, prefix="/api")
 app.include_router(staff.router, prefix="/api")
 app.include_router(hr.router, prefix="/api")
 app.include_router(chat.router, prefix="/api")

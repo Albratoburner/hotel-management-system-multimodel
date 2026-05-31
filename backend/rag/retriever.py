@@ -2,9 +2,8 @@ import os
 from langchain_chroma import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_groq import ChatGroq
-from langchain.chains import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -18,30 +17,34 @@ def get_rag_chain():
     retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
 
     # Load LLM
-    llm = ChatGroq(model="llama3-70b-8192", temperature=0)
+    api_key = os.environ.get("GROQ_API_KEY")
+    llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=api_key, temperature=0)
 
     # Create Prompt
-    system_prompt = (
+    prompt = ChatPromptTemplate.from_template(
         "You are an AI assistant for a hotel management system. "
         "Use the following pieces of retrieved context to answer the user's question. "
-        "If you don't know the answer, just say that you don't know. "
-        "Context: {context}"
+        "If you don't know the answer, just say that you don't know.\n\n"
+        "Context: {context}\n\n"
+        "Question: {input}"
     )
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
-        ("human", "{input}"),
-    ])
+
+    def format_docs(docs):
+        return "\\n\\n".join(doc.page_content for doc in docs)
 
     # Create Chain
-    question_answer_chain = create_stuff_documents_chain(llm, prompt)
-    rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+    rag_chain = (
+        {"context": retriever | format_docs, "input": RunnablePassthrough()}
+        | prompt
+        | llm
+    )
     
     return rag_chain
 
 def answer_policy_query(query: str) -> str:
     try:
         chain = get_rag_chain()
-        response = chain.invoke({"input": query})
-        return response["answer"]
+        response = chain.invoke(query)
+        return response.content
     except Exception as e:
         return f"Error processing query: {str(e)}"
