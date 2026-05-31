@@ -1,0 +1,16 @@
+room_number,room_type,snapshot_status,current_guest,booking_id,booking_status
+101,Standard,Available,,,
+102,Standard,Available,,,
+103,Deluxe,Available,,,
+104,Standard,Maintenance,,,
+105,Deluxe,Available,,,
+201,Suite,Available,,,
+202,Deluxe,Booked,John Miller,B003,Checked-in
+203,Standard,Available,,,
+204,Suite,Booked,Sita Gurung,B004,Checked-in
+205,Deluxe,Available,,,
+301,Suite,Booked,Thomas Mueller,B029,Checked-in
+302,Standard,Booked,Anil Kumar,B005,Confirmed
+303,Deluxe,Maintenance,,,
+304,Standard,Available,,,
+305,Suite,Available,,,

@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pandas
+langchain
+langchain-groq
+langchain-chroma
+sentence-transformers
+pypdf
+python-dotenv
+chromadb
+pydantic
+pydantic-settings

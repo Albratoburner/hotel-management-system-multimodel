@@ -1,0 +1,13 @@
+employee_id,name,role,department,salary,status
+E001,Amit Khadka,Manager,Front Office,75000,Active
+E002,Sunita Basnet,Receptionist,Front Office,28000,Active
+E003,Prakash Thapa,Receptionist,Front Office,26000,Active
+E004,Rita Magar,Housekeeping,Operations,22000,Active
+E005,Bishnu Poudel,Housekeeping,Operations,22000,Active
+E006,Manoj Dhakal,Chef,Kitchen,45000,Active
+E007,Pooja Sharma,Manager,HR,70000,Active
+E008,Dipesh Rai,Housekeeping,Operations,22000,Inactive
+E009,Nisha Tamang,Receptionist,Front Office,27000,Active
+E010,Sanjay Koirala,Chef,Kitchen,42000,Active
+E011,Anita Gurung,Manager,Operations,68000,Active
+E012,Ramesh Bhandari,Receptionist,Front Office,25000,Inactive
