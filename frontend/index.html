@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel AI Assistant</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .chat-container { background: white; width: 450px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; height: 80vh; }
+        .header { background: #2c3e50; color: white; padding: 20px; text-align: center; font-size: 1.2rem; font-weight: bold; }
+        .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .message { padding: 12px 16px; border-radius: 8px; max-width: 80%; line-height: 1.4; word-wrap: break-word; }
+        .user-msg { background: #3498db; color: white; align-self: flex-end; border-bottom-right-radius: 0; }
+        .bot-msg { background: #ecf0f1; color: #2c3e50; align-self: flex-start; border-bottom-left-radius: 0; }
+        .approval-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 0.9rem; }
+        .btn-group { margin-top: 10px; display: flex; gap: 10px; }
+        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-approve { background: #27ae60; color: white; }
+        .btn-reject { background: #e74c3c; color: white; }
+        .input-area { display: flex; padding: 15px; background: #fafafa; border-top: 1px solid #eee; }
+        input[type="text"] { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 1rem; }
+        button#send-btn { background: #2c3e50; color: white; border: none; padding: 10px 20px; margin-left: 10px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: background 0.3s; }
+        button#send-btn:hover { background: #1a252f; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="header">Hotel AI Assistant 🏨</div>
+    <div class="messages" id="messages">
+        <div class="message bot-msg">Hello! I am your AI assistant. You can ask me to book rooms, issue bonuses, or ask about hotel policies!</div>
+    </div>
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="Type your request here..." autocomplete="off" />
+        <button id="send-btn">Send</button>
+    </div>
+</div>
+
+<script>
+    const messagesDiv = document.getElementById('messages');
+    const inputField = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const API_BASE = "http://127.0.0.1:8000/api";
+
+    let pendingAction = null;
+
+    function addMessage(text, isUser = false) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${isUser ? 'user-msg' : 'bot-msg'}`;
+        msgDiv.textContent = text;
+        messagesDiv.appendChild(msgDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function addApprovalBox(data) {
+        pendingAction = data.pending_intent;
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message bot-msg`;
+        
+        msgDiv.innerHTML = `
+            <div class="approval-box">
+                <strong>Action Required:</strong><br/>
+                ${data.message}
+                <div class="btn-group">
+                    <button class="btn btn-approve" onclick="handleApproval(true, this)">Approve</button>
+                    <button class="btn btn-reject" onclick="handleApproval(false, this)">Reject</button>
+                </div>
+            </div>
+        `;
+        messagesDiv.appendChild(msgDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    async function handleApproval(approved, btnElement) {
+        // Disable buttons
+        const group = btnElement.parentElement;
+        group.innerHTML = `<em>${approved ? 'Approved' : 'Rejected'}</em>`;
+        
+        try {
+            const res = await fetch(`${API_BASE}/chat/execute`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ intent_data: pendingAction, approved })
+            });
+            const data = await res.json();
+            
+            if (data.status === "CANCELLED") {
+                addMessage("Action cancelled.");
+            } else if (data.error) {
+                addMessage(`Error: ${data.error}`);
+            } else {
+                addMessage(`Success! ${JSON.stringify(data)}`);
+            }
+        } catch (e) {
+            addMessage(`Failed to execute: ${e.message}`);
+        }
+        
+        pendingAction = null;
+    }
+
+    async function sendMessage() {
+        const text = inputField.value.trim();
+        if (!text) return;
+
+        addMessage(text, true);
+        inputField.value = '';
+
+        try {
+            const res = await fetch(`${API_BASE}/chat/`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: text })
+            });
+            const data = await res.json();
+
+            if (data.status === "AWAITING_APPROVAL") {
+                addApprovalBox(data);
+            } else if (data.status === "SUCCESS") {
+                addMessage(data.message);
+            } else {
+                addMessage(data.message || JSON.stringify(data));
+            }
+        } catch (e) {
+            addMessage(`Connection error: ${e.message}`);
+        }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    inputField.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+</script>
+
+</body>
+</html>
