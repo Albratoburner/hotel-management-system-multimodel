@@ -1,6 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.api import staff, hr, chat, auth, stats
+from backend.db.db import engine, Base
+import backend.db.models
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="AI Hotel Management System")
 

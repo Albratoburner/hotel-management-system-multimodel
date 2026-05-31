@@ -48,3 +48,22 @@ class Bonus(Base):
     amount = Column(Float)
     reason = Column(String)
     date = Column(String) # YYYY-MM-DD string
+
+class Refund(Base):
+    __tablename__ = "refunds"
+
+    refund_id = Column(String, primary_key=True, index=True)
+    booking_id = Column(String)
+    amount = Column(Float)
+    reason = Column(String)
+    date = Column(String)
+
+class ChatLog(Base):
+    __tablename__ = "chat_logs"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_email = Column(String)
+    role = Column(String)
+    query = Column(String)
+    response = Column(String)
+    timestamp = Column(String)

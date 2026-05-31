@@ -39,3 +39,25 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
             "employees_by_dept": employee_chart
         }
     }
+
+from backend.api.auth import get_current_user
+from backend.db.models import Refund
+
+@router.get("/bookings")
+def get_bookings(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    bookings = db.query(Booking).all()
+    return bookings
+
+@router.get("/employees")
+def get_employees(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "hr":
+        return []
+    employees = db.query(Employee).all()
+    return employees
+
+@router.get("/refunds")
+def get_refunds(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "hr":
+        return []
+    refunds = db.query(Refund).all()
+    return refunds

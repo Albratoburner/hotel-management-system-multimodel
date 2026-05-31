@@ -65,3 +65,32 @@ def cancel_booking(db: Session, booking_id: str) -> dict:
         
     db.commit()
     return {"message": f"Booking {booking_id} cancelled successfully"}
+
+def issue_refund(db: Session, booking_id: str, amount: float, reason: str) -> dict:
+    from backend.db.models import Refund
+    import datetime
+    import uuid
+
+    booking = db.query(Booking).filter(Booking.booking_id == booking_id).first()
+    if not booking:
+        return {"error": f"Booking {booking_id} not found."}
+
+    if booking.status != "Cancelled":
+        return {"error": f"Refund not acceptable. Booking {booking_id} must be 'Cancelled' first."}
+
+    refund_id = f"REF{str(uuid.uuid4())[:5].upper()}"
+    today_date = datetime.date.today().strftime("%Y-%m-%d")
+
+    refund = Refund(
+        refund_id=refund_id,
+        booking_id=booking_id,
+        amount=amount,
+        reason=reason,
+        date=today_date
+    )
+
+    db.add(refund)
+    db.commit()
+    db.refresh(refund)
+
+    return {"message": f"Refund of {amount} issued successfully for booking {booking_id}"}
