@@ -1,6 +1,6 @@
 # Multi-AI Hotel Management System
 
-A state-of-the-art, AI-powered hotel management control center that leverages Large Language Models (LLMs) to intelligently automate operations. The system features a fully authenticated, role-based frontend, a powerful CRUD AI intent parser, and a Retrieval-Augmented Generation (RAG) engine for natural language policy inquiries.
+A state-of-the-art, AI-powered hotel management control center that leverages a multi-model architecture to intelligently automate operations. The system features a fully authenticated, role-based frontend, a powerful CRUD AI intent parser, and an optimized Retrieval-Augmented Generation (RAG) engine for natural language policy inquiries.
 
 ## 🚀 Key Features
 
@@ -10,20 +10,27 @@ A state-of-the-art, AI-powered hotel management control center that leverages La
 - **Staff Capabilities**: Can manage room bookings and cancellations, but are strictly blocked by the backend and AI prompts from performing HR or financial refund tasks.
 - **Dynamic UI**: The dashboard intelligently adapts to the logged-in user, hiding sensitive HR statistics and data tables from standard staff.
 
-### 2. Intelligent AI Engine (LangChain + Groq)
-- **Natural Language CRUD**: Users can type commands like *"Issue a $500 bonus to John"* or *"Cancel booking B12345"*. The system uses **Groq (llama-3.3-70b-versatile)** to parse the intent, extract relevant entities, and ask for any missing fields.
+### 2. Multi-Model AI Engine Architecture (LangChain + Groq)
+To eliminate hallucination loops while maintaining high reasoning capabilities, this project uses a specialized multi-model architecture via Groq:
+- **Natural Language CRUD (Llama-3.3-70b-versatile)**: Users can type commands like *"Issue a $500 bonus to John"* or *"Cancel booking B12345"*. The system uses the 70B Llama model to parse the intent, extract relevant entities, and ask for any missing fields.
 - **Human-in-the-Loop Approval**: Before executing any destructive or financial operation, the AI presents a clear "Approve / Reject" prompt to the user.
-- **RAG Policy Engine**: Ask questions like *"What is our refund policy?"*. The system uses **ChromaDB** and HuggingFace embeddings (`all-MiniLM-L6-v2`) to retrieve exact policy text from ingested PDF documents. It also injects real-time SQLite database pricing into the context so the AI can accurately quote current room rates alongside static policies.
+- **RAG Policy Engine (Qwen 3 32B)**: Ask questions like *"What is our refund policy?"*. The system uses **ChromaDB** and HuggingFace embeddings (`all-MiniLM-L6-v2`) to retrieve exact policy text from ingested PDF documents. The **Qwen** model is used specifically for RAG generation because it avoids the bulleted-list repetition bugs present in Llama inference implementations. It strips out internal `<think>` tags and delivers a clean, concise response.
 
 ### 3. Premium Frontend (Vite + React)
 - **Glassmorphism Design**: A stunning, modern dark-mode aesthetic with vibrant color gradients and micro-animations (via Framer Motion).
-- **Persistent Chat History**: All AI interactions are logged to the database. When you log in, your previous conversations seamlessly load into the chat window.
+- **Persistent Chat History**: All AI interactions are logged to the database. When you log in, your previous conversations seamlessly load into the chat window. Includes a "New Chat" button to clear the session database logs instantly.
 - **Live Data Tables**: Interactive HTML data tables for Bookings, Employees, and Refunds, natively rendered alongside top-level metrics like Occupancy Rate and Active Bookings.
+
+## 🧠 RAG implementation & Chunking Strategy
+
+- **Document Ingestion**: Internal PDFs (policies, HR rules, FAQs) are parsed using `PyPDFLoader`.
+- **Chunking Profile**: To make the small internal documents highly "RAGable" without fracturing context, we use a `RecursiveCharacterTextSplitter` with an optimized `chunk_size` of `2000` characters and a `chunk_overlap` of `200`. This ensures that when the AI searches for an answer, it pulls down cohesive, uninterrupted blocks of text.
+- **Hybrid Context Injection**: The RAG pipeline separates semantic vector searches (which only use the raw user query) from dynamic context injection (like live DB room rates). System Prompts are strictly separated from Human Messages, and real-time database lookups are appended to the static vector search results.
 
 ## 🛠️ Technology Stack
 
 - **Backend**: Python, FastAPI, SQLAlchemy, SQLite, Uvicorn (managed by `uv`)
-- **AI & RAG**: LangChain, ChromaDB, Groq API (LLaMA 3)
+- **AI & RAG**: LangChain, ChromaDB, Groq API (Llama 3 & Qwen 3)
 - **Frontend**: React, Vite, TypeScript, Framer Motion, Lucide React
 
 ## 📦 How to Run
@@ -47,9 +54,3 @@ npm run dev
 Access the application at `http://localhost:5173/` (or the port Vite provides) and use the following test accounts:
 - **HR Access**: `hr@gmail.com` / `admin`
 - **Staff Access**: `staff@gmail.com` / `admin`
-
-## 🧠 System Architecture Notes
-
-- **Avoiding Hallucinations**: The RAG pipeline separates semantic vector searches (which only use the raw user query) from dynamic context injection (like live DB room rates). System Prompts are strictly separated from Human Messages to prevent LLaMA 3 continuation hallucinations.
-- **Data Ingestion**: If policies change, drop the existing `chroma_db` folder and run `uv run python scripts/03_ingest_docs.py` to re-chunk and index the PDF documents with high-precision chunking parameters.
-- **Logging**: All chat events are persisted to the `chat_logs` table, allowing for historical auditing of AI actions.
