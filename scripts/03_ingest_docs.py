@@ -35,7 +35,7 @@ def ingest_docs():
     print(f"Loaded {len(documents)} document pages.")
 
     # Split documents with better chunking parameters for accuracy
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=200)
     splits = text_splitter.split_documents(documents)
     print(f"Created {len(splits)} text chunks.")
 

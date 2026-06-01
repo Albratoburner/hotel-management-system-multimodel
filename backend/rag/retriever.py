@@ -18,11 +18,11 @@ def get_rag_chain():
 
     # Load LLM
     api_key = os.environ.get("GROQ_API_KEY")
-    llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=api_key, temperature=0)
+    llm = ChatGroq(model="qwen/qwen3-32b", api_key=api_key, temperature=0.1)
 
     # Create Prompt (using proper system and human messages to prevent Llama 3 from hallucinating text completions)
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are an AI assistant for a hotel management system.\nUse the following pieces of retrieved context to answer the user's question.\nIf you don't know the answer, just say that you don't know.\n\nContext:\n{context}"),
+        ("system", "You are an AI assistant for a hotel management system.\nUse the following pieces of retrieved context to answer the user's question.\nIf you don't know the answer, just say that you don't know.\nCRITICAL: Keep your answer extremely concise. DO NOT repeat the same phrase or sentence multiple times. Stop immediately once you have answered the question.\n\nContext:\n{context}"),
         ("human", "{input}")
     ])
 
@@ -78,16 +78,19 @@ def answer_policy_query(query: str) -> str:
         from langchain_core.prompts import ChatPromptTemplate
         
         api_key = os.environ.get("GROQ_API_KEY")
-        llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=api_key, temperature=0)
+        llm = ChatGroq(model="qwen/qwen3-32b", api_key=api_key, temperature=0.1)
         
         prompt = ChatPromptTemplate.from_messages([
-            ("system", "You are an AI assistant for a hotel management system.\nUse the following pieces of retrieved context to answer the user's question.\nIf you don't know the answer, just say that you don't know.\n\nContext:\n{context}"),
+            ("system", "You are an AI assistant for a hotel management system.\nUse the following pieces of retrieved context to answer the user's question.\nIf you don't know the answer, just say that you don't know.\nCRITICAL: Keep your answer extremely concise. DO NOT repeat the same phrase or sentence multiple times. Stop immediately once you have answered the question.\n\nContext:\n{context}"),
             ("human", "{input}")
         ])
         
         final_chain = prompt | llm
         response = final_chain.invoke({"context": combined_context, "input": query})
+        import re
+        content = response.content
+        content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
         
-        return response.content
+        return content
     except Exception as e:
         return f"Error processing query: {str(e)}"

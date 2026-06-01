@@ -16,7 +16,7 @@ class Intent(BaseModel):
     check_out_date: Optional[str] = Field(None, description="Check-out date YYYY-MM-DD")
     booking_id: Optional[str] = Field(None, description="Booking ID to cancel")
     employee_name: Optional[str] = Field(None, description="Name of the employee")
-    amount: Optional[float] = Field(None, description="Bonus amount or new salary amount")
+    amount: Optional[float] = Field(None, description="Bonus amount, new salary amount, or refund amount")
     reason: Optional[str] = Field(None, description="Reason for the bonus")
 
 def parse_intent(query: str, user_role: str = "staff") -> dict:

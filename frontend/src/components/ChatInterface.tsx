@@ -106,11 +106,40 @@ const ChatInterface: React.FC = () => {
     }
   };
 
+  const handleNewChat = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch('http://127.0.0.1:8000/api/chat/history', {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setMessages([{ id: 'init', text: 'Hello! I am your AI assistant. How can I help you today?', isUser: false }]);
+    } catch (err) {
+      console.error("Failed to clear history", err);
+    }
+  };
+
   return (
     <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        <Bot color="var(--primary)" />
-        <h3 style={{ margin: 0 }}>AI Assistant</h3>
+      <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <Bot color="var(--primary)" />
+          <h3 style={{ margin: 0 }}>AI Assistant</h3>
+        </div>
+        <button 
+          onClick={handleNewChat}
+          style={{
+            background: 'transparent',
+            border: '1px solid var(--primary)',
+            color: 'var(--primary)',
+            padding: '0.4rem 0.8rem',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '0.85rem'
+          }}
+        >
+          New Chat
+        </button>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>

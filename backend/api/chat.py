@@ -37,6 +37,12 @@ def get_chat_history(db: Session = Depends(get_db), current_user: dict = Depends
     logs = db.query(ChatLog).filter(ChatLog.user_email == current_user.get("email")).order_by(ChatLog.id.asc()).all()
     return [{"query": log.query, "response": log.response, "timestamp": log.timestamp} for log in logs]
 
+@router.delete("/history")
+def clear_chat_history(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    db.query(ChatLog).filter(ChatLog.user_email == current_user.get("email")).delete()
+    db.commit()
+    return {"message": "Chat history cleared"}
+
 @router.post("/")
 def chat_endpoint(req: ChatRequest, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     user_role = current_user.get("role", "staff")
@@ -66,8 +72,11 @@ def chat_endpoint(req: ChatRequest, db: Session = Depends(get_db), current_user:
             if not intent_data.get("room_type"): missing_fields.append("room type")
             if not intent_data.get("check_in_date"): missing_fields.append("check-in date")
             if not intent_data.get("check_out_date"): missing_fields.append("check-out date")
-        elif act in ["CANCEL_BOOKING", "ISSUE_REFUND"]:
+        elif act == "CANCEL_BOOKING":
             if not intent_data.get("booking_id"): missing_fields.append("booking ID")
+        elif act == "ISSUE_REFUND":
+            if not intent_data.get("booking_id"): missing_fields.append("booking ID")
+            if not intent_data.get("amount"): missing_fields.append("amount")
         elif act in ["ISSUE_BONUS", "UPDATE_SALARY"]:
             if not intent_data.get("employee_name"): missing_fields.append("employee name")
             if not intent_data.get("amount"): missing_fields.append("amount")

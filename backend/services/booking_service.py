@@ -10,8 +10,9 @@ def get_rooms(db: Session, status: Optional[str] = None) -> List[Room]:
     return query.all()
 
 def create_booking(db: Session, guest_name: str, room_type: str, check_in_date: str, check_out_date: str) -> dict:
-    # 1. Find an available room of the requested type
-    room = db.query(Room).filter(Room.room_type == room_type, Room.status == "Available").first()
+    from sqlalchemy import func
+    # 1. Find an available room of the requested type (case-insensitive)
+    room = db.query(Room).filter(func.lower(Room.room_type) == room_type.lower(), Room.status == "Available").first()
     if not room:
         return {"error": f"No available rooms of type {room_type}"}
 
